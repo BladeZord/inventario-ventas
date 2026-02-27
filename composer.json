@@ -1,0 +1,7 @@
+// para evitar conflicto con los imports de php
+{
+    "autoload": {
+        "psr-4": {"App\\": "app/"},
+        "classmap": ["app/"]
+    }
+}

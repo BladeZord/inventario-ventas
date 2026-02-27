@@ -1,0 +1,72 @@
+# =========================
+# Dependencias
+# =========================
+vendor/
+node_modules/
+
+# =========================
+# Archivos de entorno
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs y cache
+# =========================
+*.log
+logs/
+tmp/
+cache/
+storage/
+bootstrap/cache/
+
+# =========================
+# Uploads / archivos generados
+# =========================
+public/uploads/
+public/files/
+public/temp/
+*.zip
+*.tar
+*.gz
+
+# =========================
+# Config sensible (opcional)
+# =========================
+app/config/local.php
+app/config/*.local.php
+
+# =========================
+# Sistema operativo
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# =========================
+# IDE / Editores
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =========================
+# PHPUnit (si usas)
+# =========================
+.phpunit.result.cache
+coverage/
+
+# =========================
+# Composer
+# =========================
+composer.lock
+
+# =========================
+# Otros temporales
+# =========================
+*.bak
+*.tmp
+*.old
