@@ -1,0 +1,78 @@
+table categorias {
+    id int [pk]
+    nombre varchar
+    descripcion varchar
+    estado varchar
+    fecha_creacion timestamp
+    fecha_actualizacion timestamp
+}
+
+table productos {
+    id int [pk]
+    id_categoria int
+    nombre varchar
+    descripcion varchar
+    precio_compra float
+    precio_venta float
+    stock int
+    stock_minimo int
+    id_unidad_medida int
+    estado varchar
+    fecha_creacion timestamp
+    fecha_actualizacion timestamp
+}
+
+table unidades_medida {
+    id int [pk]
+    nombre varchar
+    descripcion varchar
+    estado varchar
+    fecha_creacion timestamp
+    fecha_actualizacion timestamp
+}
+
+table clientes {
+    id int [pk]
+    identificacion varchar
+    nombres varchar
+    apellidos varchar
+    correo varchar
+    telefono varchar
+    direccion varchar
+    estado varchar
+    fecha_creacion timestamp
+    fecha_actualizacion timestamp
+}
+
+table ventas {
+    id int [pk]
+    id_cliente int
+    numero_factura varchar
+    subtotal numeric(12,2)
+    descuento numeric(12,2)
+    impuesto numeric(12,2)
+    total numeric(12,2)
+    metodo_pago varchar
+    estado varchar
+    fecha_creacion timestamp
+    fecha_actualizacion timestamp
+}
+
+table detalle_ventas {
+    id int [pk]
+    id_venta int
+    id_producto int
+    cantidad int
+    precio_unitario numeric(12,2)
+    descuento numeric(12,2)
+    total_linea numeric(12,2)
+    estado varchar
+    fecha_creacion timestamp
+    fecha_actualizacion timestamp
+}
+
+Ref: productos.id_categoria > categorias.id
+Ref: productos.id_unidad_medida > unidades_medida.id
+Ref: ventas.id_cliente > clientes.id
+Ref: detalle_ventas.id_venta > ventas.id
+Ref: detalle_ventas.id_producto > productos.id

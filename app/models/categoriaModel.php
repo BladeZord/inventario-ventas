@@ -40,7 +40,7 @@ class CategoriaModel extends Conexion
     {
         $stmt = $this->dbh->prepare("
         SELECT *
-        FROM public.categoria
+        FROM public.categorias
         WHERE id = :id
           AND estado <> :estado_eliminado
         LIMIT 1
@@ -67,7 +67,7 @@ class CategoriaModel extends Conexion
             $estado = $categoria['estado'] ?? 'ACTIVO';
 
             $stmt = $this->dbh->prepare("
-            INSERT INTO public.categoria (
+            INSERT INTO public.categorias (
                 nombre,
                 descripcion,
                 estado,
@@ -122,7 +122,7 @@ class CategoriaModel extends Conexion
 
             if ($estado === null) {
                 $stmt = $this->dbh->prepare("
-                UPDATE public.categoria
+                UPDATE public.categorias
                 SET nombre = :nombre,
                     descripcion = :descripcion,
                     fecha_actualizacion = NOW()
@@ -138,7 +138,7 @@ class CategoriaModel extends Conexion
                 ]);
             } else {
                 $stmt = $this->dbh->prepare("
-                UPDATE public.categoria
+                UPDATE public.categorias
                 SET nombre = :nombre,
                     descripcion = :descripcion,
                     estado = :estado,
@@ -191,7 +191,7 @@ class CategoriaModel extends Conexion
 
         try {
             $stmt = $this->dbh->prepare("
-            UPDATE public.categoria
+            UPDATE public.categorias
             SET estado = :estado,
                 fecha_actualizacion = NOW()
             WHERE id = :id
