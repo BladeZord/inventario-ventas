@@ -6,6 +6,7 @@ use App\Config\Ambiente;
 class Logger
 {
     private static ?string $logPath = null;
+    private static bool $timezoneSet = false;
 
     /**
      * Directorio raíz del proyecto (donde está app/, public/, .env).
@@ -73,6 +74,8 @@ class Logger
     private static function write(string $level, string $message, array $context): void
     {
         try {
+            self::ensureTimezone(); 
+            
             $logPath = self::getLogPath();
 
             if (!is_dir($logPath)) {
@@ -93,5 +96,28 @@ class Logger
             // Fallback a error_log para no romper la aplicación si falla el archivo
             error_log("Logger: no se pudo escribir en {$logPath}: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Establece la zona horaria desde .env (APP_TIMEZONE) una sola vez.
+     * Así los timestamps en los logs usan la zona configurada.
+     */
+    private static function ensureTimezone(): void
+    {
+        if (self::$timezoneSet) {
+            return;
+        }
+
+        Ambiente::load(__DIR__ . '/../../.env');
+        $tz = Ambiente::get('APP_TIMEZONE', 'America/Guayaquil');
+
+        try {
+            new \DateTimeZone($tz);
+            date_default_timezone_set($tz);
+        } catch (\Throwable $e) {
+            date_default_timezone_set('America/Guayaquil');
+        }
+
+        self::$timezoneSet = true;
     }
 }
