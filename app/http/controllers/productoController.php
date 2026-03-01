@@ -51,7 +51,7 @@ class ProductoController{
         }
     }
 
-    public function crearProducto($producto){
+    public function crearProducto(array $producto){
         Logger::logInfo('Controller: Inicia crearProducto', ['producto' => $producto]);
         try{
             $resultado = $this->IProductoService->crearProducto($producto);
@@ -64,7 +64,7 @@ class ProductoController{
         }
     }
 
-    public function actualizarProducto($producto){
+    public function actualizarProducto(array $producto){
         Logger::logInfo('Controller: Inicia actualizarProducto', ['producto' => $producto]);
         try{
             $resultado = $this->IProductoService->actualizarProducto($producto);
