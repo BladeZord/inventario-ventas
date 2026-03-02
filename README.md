@@ -68,7 +68,7 @@ Este proyecto ha sido desarrollado con asistencia de **herramientas de inteligen
    ```bash
    composer install
    ```
-Se usó composer para el uso de namespaces e imports automáticos
+Se usó composer para el uso de namespaces e imports automáticos \n
 6. **Arrancar el servidor PHP** (desde la raíz del proyecto):
    ```bash
    php -S localhost:8000 -t public
