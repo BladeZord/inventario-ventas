@@ -1,0 +1,86 @@
+<div class="container py-4" data-controller="/js/registro-ventas.js">
+    <h2 class="h4 mb-4">Registro de ventas</h2>
+
+    <!-- Nueva venta -->
+    <div class="card mb-4">
+        <div class="card-header"><strong>Nueva venta</strong></div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cliente</label>
+                    <select class="form-select" id="venta-cliente" required>
+                        <option value="">Seleccione un cliente</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Número de factura</label>
+                    <input type="text" class="form-control" id="venta-numero_factura" placeholder="Ej: F-001" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Método de pago</label>
+                    <select class="form-select" id="venta-metodo_pago">
+                        <option value="">Seleccione</option>
+                        <option value="EFECTIVO">EFECTIVO</option>
+                        <option value="TARJETA">TARJETA</option>
+                        <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                    </select>
+                </div>
+            </div>
+
+            <label class="form-label">Detalle de venta</label>
+            <div class="table-responsive mb-2">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th style="width:100px">Cantidad</th>
+                            <th style="width:120px">Precio unit.</th>
+                            <th style="width:100px">Descuento</th>
+                            <th style="width:120px">Total línea</th>
+                            <th style="width:50px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="venta-detalle-tbody"></tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="venta-agregar-linea">+ Agregar línea</button>
+
+            <div class="row justify-content-end">
+                <div class="col-md-4">
+                    <div class="mb-2 d-flex justify-content-between"><span>Subtotal:</span><span id="venta-subtotal">0.00</span></div>
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span>Descuento global:</span>
+                        <input type="number" class="form-control form-control-sm d-inline-block" id="venta-descuento" value="0" min="0" step="0.01" style="width:100px">
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span>Impuesto:</span>
+                        <input type="number" class="form-control form-control-sm d-inline-block" id="venta-impuesto" value="0" min="0" step="0.01" style="width:100px">
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between fw-bold"><span>Total:</span><span id="venta-total">0.00</span></div>
+                    <button type="button" class="btn btn-primary w-100" id="venta-registrar">Registrar venta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consulta de ventas -->
+    <div class="card">
+        <div class="card-header"><strong>Ventas realizadas</strong></div>
+        <div class="card-body">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nº Factura</th>
+                        <th>Cliente</th>
+                        <th>Total</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="data-ventas"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
