@@ -114,21 +114,20 @@ const eliminarProducto = async function (id) {
 
 function renderProductos(productos, tbody) {
   if (!Array.isArray(productos) || productos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" class="text-center">No hay productos disponibles</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center">No hay productos disponibles</td></tr>`;
     return;
   }
 
   tbody.innerHTML = productos.map(p => `
     <tr>
       <td>${p.id ?? ""}</td>
-      <td>${p.categoria ?? ""}</td>
-      <td>${p.codigo ?? ""}</td>
+      <td>${p.categoria_nombre ?? p.categoria ?? ""}</td>
       <td>${p.nombre ?? ""}</td>
       <td>${p.precio_compra ?? ""}</td>
       <td>${p.precio_venta ?? ""}</td>
       <td>${p.stock ?? p.stock_actual ?? ""}</td>
       <td>${p.stock_minimo ?? ""}</td>
-      <td>${p.unidad_medida ?? ""}</td>
+      <td>${p.unidad_medida_nombre ?? p.unidad_medida ?? ""}</td>
       <td>
         <button class="btn btn-sm btn-outline-primary" data-action="editar" data-id="${p.id}">Editar</button>
         <button class="btn btn-sm btn-outline-danger" data-action="eliminar" data-id="${p.id}">Eliminar</button>
@@ -165,11 +164,6 @@ function openModalProducto(accion, producto, categorias) {
                 </div>
 
                 <div class="form-group mb-2">
-                  <label class="col-form-label">Código:</label>
-                  <input type="text" class="form-control" id="codigo" name="codigo" required>
-                </div>
-
-                <div class="form-group mb-2">
                   <label class="col-form-label">Nombre:</label>
                   <input type="text" class="form-control" id="nombre" name="nombre" required placeholder="Nombre del producto">
                 </div>
@@ -195,8 +189,8 @@ function openModalProducto(accion, producto, categorias) {
                 </div>
 
                 <div class="form-group mb-2">
-                  <label class="col-form-label">Unidad de medida:</label>
-                  <input type="text" class="form-control" id="unidad_medida" name="unidad_medida">
+                  <label class="col-form-label">Unidad de medida (ID):</label>
+                  <input type="number" class="form-control" id="id_unidad_medida" name="id_unidad_medida" min="1" required title="ID de la unidad en unidades_medida">
                 </div>
 
                 <div class="form-group mb-2">
@@ -230,16 +224,16 @@ function openModalProducto(accion, producto, categorias) {
   if (accion === "Editar" && producto) {
     setVal("id", producto.id);
     setVal("categoria", producto.id_categoria ?? producto.categoria_id);
-    setVal("codigo", producto.codigo);
     setVal("nombre", producto.nombre);
     setVal("precio_compra", producto.precio_compra);
     setVal("precio_venta", producto.precio_venta);
     setVal("stock_actual", producto.stock ?? producto.stock_actual);
     setVal("stock_minimo", producto.stock_minimo);
-    setVal("unidad_medida", producto.unidad_medida ?? "");
+    setVal("id_unidad_medida", producto.id_unidad_medida ?? "");
     setVal("estado", producto.estado ?? "ACTIVO");
   } else {
     setVal("id", "");
+    setVal("id_unidad_medida", "1");
     setVal("estado", "ACTIVO");
   }
 
@@ -290,13 +284,12 @@ function openModalProducto(accion, producto, categorias) {
 
     const payload = {
       id_categoria: data.categoria_id ? Number(data.categoria_id) : null,
-      codigo: data.codigo,
       nombre,
       precio_compra: precioCompra,
       precio_venta: precioVenta,
       stock: stockActual,
       stock_minimo: stockMinimo,
-      unidad_medida: data.unidad_medida || "UNIDAD",
+      id_unidad_medida: Number(data.id_unidad_medida) || 1,
       estado: data.estado || "ACTIVO",
     };
     if (accion === "Editar" && data.id) {
@@ -336,7 +329,7 @@ export async function init() {
     renderProductos(productos, tbody);
   } catch (e) {
     console.error(e);
-    tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Error cargando productos</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error cargando productos</td></tr>`;
   }
 
   const btnNuevo = document.getElementById("btnNuevo");

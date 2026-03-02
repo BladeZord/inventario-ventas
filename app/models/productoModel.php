@@ -51,7 +51,7 @@ class ProductoModel extends Conexion
 
             $stmt = $this->dbh->prepare("
                 SELECT p.*,
-                c.nombre as categoria_nombre
+                c.nombre as categoria_nombre,
                 um.nombre as unidad_medida_nombre
                 FROM productos p
                 INNER JOIN categorias c ON c.id = p.id_categoria
@@ -87,7 +87,6 @@ class ProductoModel extends Conexion
     public function insertarProducto($producto)
     {
         Logger::logInfo("Inicia insertarProducto", [
-            'codigo' => $producto['codigo'] ?? null,
             'nombre' => $producto['nombre'] ?? null,
             'id_categoria' => $producto['id_categoria'] ?? null,
             'estado' => $producto['estado'] ?? 'ACTIVO'
@@ -95,7 +94,6 @@ class ProductoModel extends Conexion
 
         try {
             $id_categoria = isset($producto['id_categoria']) ? (int) $producto['id_categoria'] : null;
-            $codigo = trim($producto['codigo'] ?? '');
             $nombre = trim($producto['nombre'] ?? '');
             $descripcion = $producto['descripcion'] ?? null;
 
@@ -105,33 +103,31 @@ class ProductoModel extends Conexion
             $stock = isset($producto['stock']) ? (int) $producto['stock'] : 0;
             $stock_minimo = isset($producto['stock_minimo']) ? (int) $producto['stock_minimo'] : 0;
 
-            $unidad_medida = trim($producto['unidad_medida'] ?? 'UNIDAD');
+            $id_unidad_medida = isset($producto['id_unidad_medida']) ? (int) $producto['id_unidad_medida'] : 1;
             $estado = $producto['estado'] ?? 'ACTIVO';
 
             $stmt = $this->dbh->prepare("
                 INSERT INTO productos (
                     id_categoria,
-                    codigo,
                     nombre,
                     descripcion,
                     precio_compra,
                     precio_venta,
                     stock,
                     stock_minimo,
-                    unidad_medida,
+                    id_unidad_medida,
                     estado,
                     fecha_creacion
                 )
                 VALUES (
                     :id_categoria,
-                    :codigo,
                     :nombre,
                     :descripcion,
                     :precio_compra,
                     :precio_venta,
                     :stock,
                     :stock_minimo,
-                    :unidad_medida,
+                    :id_unidad_medida,
                     :estado,
                     NOW()
                 )
@@ -139,14 +135,13 @@ class ProductoModel extends Conexion
 
             $stmt->execute([
                 'id_categoria' => $id_categoria,
-                'codigo' => $codigo,
                 'nombre' => $nombre,
                 'descripcion' => $descripcion,
                 'precio_compra' => $precio_compra,
                 'precio_venta' => $precio_venta,
                 'stock' => $stock,
                 'stock_minimo' => $stock_minimo,
-                'unidad_medida' => $unidad_medida,
+                'id_unidad_medida' => $id_unidad_medida,
                 'estado' => $estado
             ]);
 
@@ -166,7 +161,6 @@ class ProductoModel extends Conexion
             Logger::logError("Error en insertarProducto: " . $e->getMessage(), [
                 'metodo' => __METHOD__,
                 'producto' => [
-                    'codigo' => $producto['codigo'] ?? null,
                     'nombre' => $producto['nombre'] ?? null,
                     'id_categoria' => $producto['id_categoria'] ?? null
                 ]
@@ -181,13 +175,11 @@ class ProductoModel extends Conexion
 
         Logger::logInfo("Inicia actualizarProducto", [
             'id' => $id,
-            'codigo' => $producto['codigo'] ?? null,
             'estado' => $producto['estado'] ?? null
         ]);
 
         try {
             $id_categoria = array_key_exists('id_categoria', $producto) ? (int) $producto['id_categoria'] : null;
-            $codigo = trim($producto['codigo'] ?? '');
             $nombre = trim($producto['nombre'] ?? '');
             $descripcion = $producto['descripcion'] ?? null;
 
@@ -197,7 +189,7 @@ class ProductoModel extends Conexion
             $stock = isset($producto['stock']) ? (int) $producto['stock'] : 0;
             $stock_minimo = isset($producto['stock_minimo']) ? (int) $producto['stock_minimo'] : 0;
 
-            $unidad_medida = trim($producto['unidad_medida'] ?? 'UNIDAD');
+            $id_unidad_medida = isset($producto['id_unidad_medida']) ? (int) $producto['id_unidad_medida'] : 1;
 
             // Si no viene estado, no lo actualizamos
             $estado = $producto['estado'] ?? null;
@@ -206,14 +198,13 @@ class ProductoModel extends Conexion
                 $stmt = $this->dbh->prepare("
                     UPDATE productos
                     SET id_categoria = :id_categoria,
-                        codigo = :codigo,
                         nombre = :nombre,
                         descripcion = :descripcion,
                         precio_compra = :precio_compra,
                         precio_venta = :precio_venta,
                         stock = :stock,
                         stock_minimo = :stock_minimo,
-                        unidad_medida = :unidad_medida,
+                        id_unidad_medida = :id_unidad_medida,
                         fecha_actualizacion = NOW()
                     WHERE id = :id
                       AND estado <> :estado_eliminado
@@ -221,14 +212,13 @@ class ProductoModel extends Conexion
 
                 $stmt->execute([
                     'id_categoria' => $id_categoria,
-                    'codigo' => $codigo,
                     'nombre' => $nombre,
                     'descripcion' => $descripcion,
                     'precio_compra' => $precio_compra,
                     'precio_venta' => $precio_venta,
                     'stock' => $stock,
                     'stock_minimo' => $stock_minimo,
-                    'unidad_medida' => $unidad_medida,
+                    'id_unidad_medida' => $id_unidad_medida,
                     'id' => $id,
                     'estado_eliminado' => 'ELIMINADO'
                 ]);
@@ -236,14 +226,13 @@ class ProductoModel extends Conexion
                 $stmt = $this->dbh->prepare("
                     UPDATE productos
                     SET id_categoria = :id_categoria,
-                        codigo = :codigo,
                         nombre = :nombre,
                         descripcion = :descripcion,
                         precio_compra = :precio_compra,
                         precio_venta = :precio_venta,
                         stock = :stock,
                         stock_minimo = :stock_minimo,
-                        unidad_medida = :unidad_medida,
+                        id_unidad_medida = :id_unidad_medida,
                         estado = :estado,
                         fecha_actualizacion = NOW()
                     WHERE id = :id
@@ -252,14 +241,13 @@ class ProductoModel extends Conexion
 
                 $stmt->execute([
                     'id_categoria' => $id_categoria,
-                    'codigo' => $codigo,
                     'nombre' => $nombre,
                     'descripcion' => $descripcion,
                     'precio_compra' => $precio_compra,
                     'precio_venta' => $precio_venta,
                     'stock' => $stock,
                     'stock_minimo' => $stock_minimo,
-                    'unidad_medida' => $unidad_medida,
+                    'id_unidad_medida' => $id_unidad_medida,
                     'estado' => $estado,
                     'id' => $id,
                     'estado_eliminado' => 'ELIMINADO'
