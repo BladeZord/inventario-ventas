@@ -127,7 +127,6 @@ class ProductoModel extends Conexion
                     :estado,
                     NOW()
                 )
-                RETURNING id
             ");
 
             $stmt->execute([
@@ -143,8 +142,7 @@ class ProductoModel extends Conexion
                 'estado' => $estado
             ]);
 
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $id = $row ? (int) $row['id'] : (int) $this->dbh->lastInsertId();
+            $id = (int) $this->dbh->lastInsertId();
 
             Logger::logInfo("Finaliza insertarProducto", [
                 'id' => $id,

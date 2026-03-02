@@ -96,3 +96,59 @@ export function mostrarMensaje(mensaje, tipo = "info", opts = {}) {
   return overlay; // por si quieres manipularlo
 }
 
+/**
+ * Muestra un modal de confirmación (Bootstrap) y devuelve una Promise con la respuesta.
+ * @param {string} mensaje - Texto del mensaje (ej: "¿Eliminar este producto?")
+ * @param {string} [titulo="Confirmar"] - Título del modal
+ * @param {string} [textoConfirmar="Eliminar"] - Texto del botón de confirmar
+ * @returns {Promise<boolean>} - true si confirma, false si cancela o cierra
+ */
+export function confirmarModal(mensaje, titulo = "Confirmar", textoConfirmar = "Eliminar") {
+  return new Promise((resolve) => {
+    const ID_WRAP = "app-modal-confirmar-wrap";
+    const ID_MODAL = "app-modal-confirmar";
+    const prev = document.getElementById(ID_WRAP);
+    if (prev) prev.remove();
+
+    const wrap = document.createElement("div");
+    wrap.id = ID_WRAP;
+    wrap.innerHTML = `
+      <div class="modal fade" id="${ID_MODAL}" tabindex="-1" aria-labelledby="confirmarModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="confirmarModalLabel">${titulo}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">${mensaje}</div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn btn-danger" id="app-modal-confirmar-ok">${textoConfirmar}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(wrap);
+    const modalEl = document.getElementById(ID_MODAL);
+    const bsModal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+
+    const resolver = (valor) => {
+      bsModal.hide();
+      resolve(valor);
+    };
+
+    modalEl.addEventListener("hidden.bs.modal", () => {
+      wrap.remove();
+      resolve(false);
+    });
+
+    document.getElementById("app-modal-confirmar-ok").addEventListener("click", () => {
+      resolver(true);
+    });
+
+    bsModal.show();
+  });
+}
+

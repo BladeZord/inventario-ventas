@@ -40,7 +40,7 @@ class CategoriaController
         }
     }
 
-    public function crearCategoria($categoria)
+    public function crearCategoria(array $categoria)
     {
         Logger::logInfo('Controller: Inicia crearCategoria', ['nombre' => $categoria['nombre'] ?? null]);
         try {
@@ -53,7 +53,7 @@ class CategoriaController
         }
     }
 
-    public function actualizarCategoria($categoria)
+    public function actualizarCategoria(array $categoria)
     {
         $id = $categoria['id'] ?? null;
         Logger::logInfo('Controller: Inicia actualizarCategoria', ['id' => $id]);

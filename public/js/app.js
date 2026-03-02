@@ -4,6 +4,8 @@ import { loading } from "./utilidades.js";
 const routes = {
   "/": "/views/home/home.html",
   "/productos": "/views/producto/productos.html",
+  "/categorias": "/views/categoria/categoria.html",
+  "/registro-ventas": "/views/registro-ventas/registro-ventas.html",
 };
 
 let currentModule = null;

@@ -1,4 +1,4 @@
-import { loading } from "./utilidades.js";
+import { loading, confirmarModal } from "./utilidades.js";
 
 const API_BASE = `${window.location.origin}/api`;
 
@@ -171,27 +171,27 @@ function openModalProducto(accion, producto, categorias) {
 
                 <div class="form-group mb-2">
                   <label class="col-form-label">Nombre:</label>
-                  <input type="text" class="form-control" id="nombre" name="nombre" required>
+                  <input type="text" class="form-control" id="nombre" name="nombre" required placeholder="Nombre del producto">
                 </div>
 
                 <div class="form-group mb-2">
                   <label class="col-form-label">Precio de compra:</label>
-                  <input type="number" class="form-control" id="precio_compra" name="precio_compra" step="0.01" min="0" required>
+                  <input type="number" class="form-control" id="precio_compra" name="precio_compra" step="0.01" min="0.01" required title="Debe ser mayor a 0">
                 </div>
 
                 <div class="form-group mb-2">
                   <label class="col-form-label">Precio de venta:</label>
-                  <input type="number" class="form-control" id="precio_venta" name="precio_venta" step="0.01" min="0" required>
+                  <input type="number" class="form-control" id="precio_venta" name="precio_venta" step="0.01" min="0.01" required title="Debe ser mayor a 0">
                 </div>
 
                 <div class="form-group mb-2">
                   <label class="col-form-label">Stock actual:</label>
-                  <input type="number" class="form-control" id="stock_actual" name="stock_actual" step="1" min="0" required>
+                  <input type="number" class="form-control" id="stock_actual" name="stock_actual" step="1" min="0" required title="No puede ser negativo">
                 </div>
 
                 <div class="form-group mb-2">
                   <label class="col-form-label">Stock mínimo:</label>
-                  <input type="number" class="form-control" id="stock_minimo" name="stock_minimo" step="1" min="0" required>
+                  <input type="number" class="form-control" id="stock_minimo" name="stock_minimo" step="1" min="0" required title="No puede ser negativo">
                 </div>
 
                 <div class="form-group mb-2">
@@ -259,14 +259,43 @@ function openModalProducto(accion, producto, categorias) {
     if (!form.reportValidity()) return;
 
     const data = Object.fromEntries(new FormData(form).entries());
+
+    // Validaciones: nombre no vacío, precios > 0, stock >= 0 (no negativo)
+    const nombre = (data.nombre || "").trim();
+    if (!nombre) {
+      alert("El nombre no puede estar vacío.");
+      return;
+    }
+    const precioCompra = Number(data.precio_compra);
+    const precioVenta = Number(data.precio_venta);
+    const stockActual = Number(data.stock_actual);
+    const stockMinimo = Number(data.stock_minimo);
+
+    if (precioCompra <= 0) {
+      alert("El precio de compra debe ser mayor a 0.");
+      return;
+    }
+    if (precioVenta <= 0) {
+      alert("El precio de venta debe ser mayor a 0.");
+      return;
+    }
+    if (stockActual < 0) {
+      alert("El stock actual no puede ser negativo.");
+      return;
+    }
+    if (stockMinimo < 0) {
+      alert("El stock mínimo no puede ser negativo.");
+      return;
+    }
+
     const payload = {
       id_categoria: data.categoria_id ? Number(data.categoria_id) : null,
       codigo: data.codigo,
-      nombre: data.nombre,
-      precio_compra: Number(data.precio_compra),
-      precio_venta: Number(data.precio_venta),
-      stock: Number(data.stock_actual),
-      stock_minimo: Number(data.stock_minimo),
+      nombre,
+      precio_compra: precioCompra,
+      precio_venta: precioVenta,
+      stock: stockActual,
+      stock_minimo: stockMinimo,
       unidad_medida: data.unidad_medida || "UNIDAD",
       estado: data.estado || "ACTIVO",
     };
@@ -330,7 +359,8 @@ export async function init() {
     }
 
     if (action === "eliminar") {
-      if (!confirm("¿Eliminar este producto?")) return;
+      const confirmado = await confirmarModal("¿Está seguro de eliminar este producto?", "Eliminar producto");
+      if (!confirmado) return;
       const ok = await eliminarProducto(id);
       if (ok != null) await refreshTable();
     }

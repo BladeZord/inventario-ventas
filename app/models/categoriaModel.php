@@ -18,11 +18,10 @@ class CategoriaModel extends Conexion
             Logger::logInfo("Inicia consultaCategoria");
 
             $stmt = $this->dbh->prepare("
-            SELECT *
-            FROM public.categorias
-            WHERE estado <> :estado
-            --ORDER BY id DESC
-        ");
+                SELECT *
+                FROM categorias
+                WHERE estado <> :estado
+            ");
             $stmt->execute(['estado' => 'ELIMINADO']);
 
             Logger::logInfo("Finaliza consultaCategoria");
@@ -39,12 +38,12 @@ class CategoriaModel extends Conexion
     public function consultaCategoriaPorId($id)
     {
         $stmt = $this->dbh->prepare("
-        SELECT *
-        FROM public.categorias
-        WHERE id = :id
-          AND estado <> :estado_eliminado
-        LIMIT 1
-    ");
+            SELECT *
+            FROM categorias
+            WHERE id = :id
+              AND estado <> :estado_eliminado
+            LIMIT 1
+        ");
 
         $stmt->execute([
             'id' => (int) $id,
@@ -67,15 +66,14 @@ class CategoriaModel extends Conexion
             $estado = $categoria['estado'] ?? 'ACTIVO';
 
             $stmt = $this->dbh->prepare("
-            INSERT INTO public.categorias (
-                nombre,
-                descripcion,
-                estado,
-                fecha_creacion
-            )
-            VALUES (:nombre, :descripcion, :estado, NOW())
-            RETURNING id
-        ");
+                INSERT INTO categorias (
+                    nombre,
+                    descripcion,
+                    estado,
+                    fecha_creacion
+                )
+                VALUES (:nombre, :descripcion, :estado, NOW())
+            ");
 
             $stmt->execute([
                 'nombre' => $nombre,
@@ -83,7 +81,7 @@ class CategoriaModel extends Conexion
                 'estado' => $estado
             ]);
 
-            $id = (int) $stmt->fetchColumn();
+            $id = (int) $this->dbh->lastInsertId();
 
             Logger::logInfo("Finaliza insertarCategoria", [
                 'id' => $id,
@@ -122,13 +120,13 @@ class CategoriaModel extends Conexion
 
             if ($estado === null) {
                 $stmt = $this->dbh->prepare("
-                UPDATE public.categorias
-                SET nombre = :nombre,
-                    descripcion = :descripcion,
-                    fecha_actualizacion = NOW()
-                WHERE id = :id
-                  AND estado <> :estado_eliminado
-            ");
+                    UPDATE categorias
+                    SET nombre = :nombre,
+                        descripcion = :descripcion,
+                        fecha_actualizacion = NOW()
+                    WHERE id = :id
+                      AND estado <> :estado_eliminado
+                ");
 
                 $stmt->execute([
                     'nombre' => $nombre,
@@ -138,14 +136,14 @@ class CategoriaModel extends Conexion
                 ]);
             } else {
                 $stmt = $this->dbh->prepare("
-                UPDATE public.categorias
-                SET nombre = :nombre,
-                    descripcion = :descripcion,
-                    estado = :estado,
-                    fecha_actualizacion = NOW()
-                WHERE id = :id
-                  AND estado <> :estado_eliminado
-            ");
+                    UPDATE categorias
+                    SET nombre = :nombre,
+                        descripcion = :descripcion,
+                        estado = :estado,
+                        fecha_actualizacion = NOW()
+                    WHERE id = :id
+                      AND estado <> :estado_eliminado
+                ");
 
                 $stmt->execute([
                     'nombre' => $nombre,
@@ -191,12 +189,12 @@ class CategoriaModel extends Conexion
 
         try {
             $stmt = $this->dbh->prepare("
-            UPDATE public.categorias
-            SET estado = :estado,
-                fecha_actualizacion = NOW()
-            WHERE id = :id
-              AND estado <> :estado_eliminado
-        ");
+                UPDATE categorias
+                SET estado = :estado,
+                    fecha_actualizacion = NOW()
+                WHERE id = :id
+                  AND estado <> :estado_eliminado
+            ");
 
             $stmt->execute([
                 'estado' => 'ELIMINADO',
