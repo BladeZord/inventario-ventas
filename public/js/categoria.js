@@ -1,4 +1,4 @@
-import { loading, confirmarModal } from "./utilidades.js";
+import { loading, confirmarModal, PAGE_SIZE_DEFAULT, renderPagination } from "./utilidades.js";
 
 const API_BASE = `${window.location.origin}/api`;
 
@@ -78,9 +78,9 @@ const eliminarCategoria = async function (id) {
   }
 };
 
-function renderCategorias(categorias, tbody) {
+function renderCategorias(categorias, tbody, showEmpty = true) {
   if (!Array.isArray(categorias) || categorias.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center">No hay categorías disponibles</td></tr>`;
+    tbody.innerHTML = showEmpty ? `<tr><td colspan="5" class="text-center">No hay categorías disponibles</td></tr>` : "";
     return;
   }
 
@@ -102,7 +102,7 @@ function renderCategorias(categorias, tbody) {
     .join("");
 }
 
-function openModalCategoria(accion, categoria) {
+function openModalCategoria(accion, categoria, onSaveSuccess = null) {
   const prev = document.getElementById("modalCategoria");
   if (prev) prev.remove();
 
@@ -178,7 +178,6 @@ function openModalCategoria(accion, categoria) {
   });
 
   const tbody = document.getElementById("data-categorias");
-  const refreshTable = () => cargarCategoriasList().then((list) => renderCategorias(list, tbody));
 
   document.getElementById("btnGuardarCategoria").onclick = async () => {
     const form = document.getElementById("formCategoria");
@@ -195,21 +194,21 @@ function openModalCategoria(accion, categoria) {
       const ok = await actualizarCategoria(payload);
       if (ok != null) {
         bsModal.hide();
-        await refreshTable();
+        if (onSaveSuccess) await onSaveSuccess(); else await cargarCategoriasList().then((list) => renderCategorias(list, tbody));
       }
     } else {
       const ok = await crearCategoria(payload);
       if (ok != null) {
         bsModal.hide();
-        await refreshTable();
+        if (onSaveSuccess) await onSaveSuccess(); else await cargarCategoriasList().then((list) => renderCategorias(list, tbody));
       }
     }
   };
 }
 
-function cargarModalFormularioCategoria(btn, accion, categoria = null) {
+function cargarModalFormularioCategoria(btn, accion, categoria = null, onSaveSuccess = null) {
   if (!btn) return;
-  btn.onclick = () => openModalCategoria(accion, categoria);
+  btn.onclick = () => openModalCategoria(accion, categoria, onSaveSuccess);
 }
 
 export async function init() {
@@ -219,38 +218,50 @@ export async function init() {
     return;
   }
 
-  try {
-    const categorias = await cargarCategoriasList();
-    renderCategorias(categorias, tbody);
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error cargando categorías</td></tr>`;
+  const PAGE_SIZE = PAGE_SIZE_DEFAULT;
+  let listCompleta = [];
+  let currentPage = 1;
+
+  function refreshTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = listCompleta.slice(start, start + PAGE_SIZE);
+    renderCategorias(slice.length ? slice : [], tbody, listCompleta.length === 0);
+    renderPagination("pagination-categorias", listCompleta.length, PAGE_SIZE, currentPage, (p) => {
+      currentPage = p;
+      refreshTable();
+    });
   }
+
+  async function refreshFromServer() {
+    try {
+      listCompleta = await cargarCategoriasList();
+      currentPage = 1;
+      refreshTable();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error cargando categorías</td></tr>`;
+    }
+  }
+
+  await refreshFromServer();
 
   const btnNuevo = document.getElementById("btnNuevoCategoria");
-  if (btnNuevo) {
-    cargarModalFormularioCategoria(btnNuevo, "Nuevo", null);
-  }
-
-  const refreshTable = () => cargarCategoriasList().then((list) => renderCategorias(list, tbody));
+  if (btnNuevo) cargarModalFormularioCategoria(btnNuevo, "Nuevo", null, refreshFromServer);
 
   tbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-action]");
     if (!btn) return;
-
     const id = btn.dataset.id;
     const action = btn.dataset.action;
-
     if (action === "editar") {
       const categoria = await obtenerCategoriaPorId(id);
-      if (categoria) openModalCategoria("Editar", categoria);
+      if (categoria) openModalCategoria("Editar", categoria, refreshFromServer);
     }
-
     if (action === "eliminar") {
       const confirmado = await confirmarModal("¿Está seguro de eliminar esta categoría?", "Eliminar categoría");
       if (!confirmado) return;
       const ok = await eliminarCategoria(id);
-      if (ok != null) await refreshTable();
+      if (ok != null) await refreshFromServer();
     }
   });
 }

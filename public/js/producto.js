@@ -1,4 +1,4 @@
-import { loading, confirmarModal } from "./utilidades.js";
+import { loading, confirmarModal, PAGE_SIZE_DEFAULT, renderPagination } from "./utilidades.js";
 
 const API_BASE = `${window.location.origin}/api`;
 
@@ -112,9 +112,11 @@ const eliminarProducto = async function (id) {
   }
 };
 
-function renderProductos(productos, tbody) {
+function renderProductos(productos, tbody, showEmptyMessage = true) {
   if (!Array.isArray(productos) || productos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="text-center">No hay productos disponibles</td></tr>`;
+    tbody.innerHTML = showEmptyMessage
+      ? `<tr><td colspan="9" class="text-center">No hay productos disponibles</td></tr>`
+      : "";
     return;
   }
 
@@ -137,7 +139,7 @@ function renderProductos(productos, tbody) {
 }
 
 
-function openModalProducto(accion, producto, categorias) {
+function openModalProducto(accion, producto, categorias, onSaveSuccess = null) {
   categorias = categorias || [];
   const prev = document.getElementById("modalProducto");
   if (prev) prev.remove();
@@ -246,7 +248,6 @@ function openModalProducto(accion, producto, categorias) {
   });
 
   const tbody = document.getElementById("data-productos");
-  const refreshTable = () => cargarProductos().then((list) => renderProductos(list, tbody));
 
   document.getElementById("btnGuardarProducto").onclick = async () => {
     const form = document.getElementById("formProducto");
@@ -297,23 +298,25 @@ function openModalProducto(accion, producto, categorias) {
       const ok = await actualizarProducto(payload);
       if (ok != null) {
         bsModal.hide();
-        await refreshTable();
+        if (onSaveSuccess) await onSaveSuccess(); else await cargarProductos().then((list) => renderProductos(list, tbody));
       }
     } else {
       const ok = await crearProducto(payload);
       if (ok != null) {
         bsModal.hide();
-        await refreshTable();
+        if (onSaveSuccess) await onSaveSuccess(); else await cargarProductos().then((list) => renderProductos(list, tbody));
       }
     }
   };
 }
 
-function cargarModalFormulario(btn, accion, producto = null, categorias = []) {
+function cargarModalFormulario(btn, accion, producto = null, categorias = [], onSaveSuccess = null) {
   if (!btn) return;
-  btn.onclick = () => openModalProducto(accion, producto, categorias);
+  btn.onclick = () => openModalProducto(accion, producto, categorias, onSaveSuccess);
 }
 
+
+const PAGE_SIZE = PAGE_SIZE_DEFAULT;
 
 export async function init() {
   const tbody = document.getElementById("data-productos");
@@ -323,21 +326,36 @@ export async function init() {
   }
 
   const categorias = await cargarCategorias();
+  let productosCompletos = [];
+  let currentPage = 1;
 
-  try {
-    const productos = await cargarProductos();
-    renderProductos(productos, tbody);
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error cargando productos</td></tr>`;
+  function refreshTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = productosCompletos.slice(start, start + PAGE_SIZE);
+    renderProductos(slice.length ? slice : [], tbody, productosCompletos.length === 0);
+    renderPagination("pagination-productos", productosCompletos.length, PAGE_SIZE, currentPage, (p) => {
+      currentPage = p;
+      refreshTable();
+    });
   }
+
+  async function refreshFromServer() {
+    try {
+      productosCompletos = await cargarProductos();
+      currentPage = 1;
+      refreshTable();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error cargando productos</td></tr>`;
+    }
+  }
+
+  await refreshFromServer();
 
   const btnNuevo = document.getElementById("btnNuevo");
   if (btnNuevo) {
-    cargarModalFormulario(btnNuevo, "Nuevo", null, categorias);
+    cargarModalFormulario(btnNuevo, "Nuevo", null, categorias, refreshFromServer);
   }
-
-  const refreshTable = () => cargarProductos().then((list) => renderProductos(list, tbody));
 
   tbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-action]");
@@ -348,14 +366,14 @@ export async function init() {
 
     if (action === "editar") {
       const producto = await obtenerPoductoPorId(id);
-      if (producto) openModalProducto("Editar", producto, categorias);
+      if (producto) openModalProducto("Editar", producto, categorias, refreshFromServer);
     }
 
     if (action === "eliminar") {
       const confirmado = await confirmarModal("¿Está seguro de eliminar este producto?", "Eliminar producto");
       if (!confirmado) return;
       const ok = await eliminarProducto(id);
-      if (ok != null) await refreshTable();
+      if (ok != null) await refreshFromServer();
     }
   });
 }

@@ -1,4 +1,4 @@
-import { loading, confirmarModal } from "./utilidades.js";
+import { loading, confirmarModal, PAGE_SIZE_DEFAULT, renderPagination } from "./utilidades.js";
 
 const API_BASE = `${window.location.origin}/api`;
 
@@ -78,9 +78,9 @@ const eliminarUnidadMedida = async function (id) {
   }
 };
 
-function renderUnidadesMedida(lista, tbody) {
+function renderUnidadesMedida(lista, tbody, showEmpty = true) {
   if (!Array.isArray(lista) || lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center">No hay unidades de medida disponibles</td></tr>`;
+    tbody.innerHTML = showEmpty ? `<tr><td colspan="5" class="text-center">No hay unidades de medida disponibles</td></tr>` : "";
     return;
   }
 
@@ -102,7 +102,7 @@ function renderUnidadesMedida(lista, tbody) {
     .join("");
 }
 
-function openModalUnidadMedida(accion, unidad) {
+function openModalUnidadMedida(accion, unidad, onSaveSuccess = null) {
   const prev = document.getElementById("modalUnidadMedida");
   if (prev) prev.remove();
 
@@ -178,7 +178,6 @@ function openModalUnidadMedida(accion, unidad) {
   });
 
   const tbody = document.getElementById("data-unidades-medida");
-  const refreshTable = () => cargarUnidadesMedidaList().then((list) => renderUnidadesMedida(list, tbody));
 
   document.getElementById("btnGuardarUnidadMedida").onclick = async () => {
     const form = document.getElementById("formUnidadMedida");
@@ -195,62 +194,72 @@ function openModalUnidadMedida(accion, unidad) {
       const ok = await actualizarUnidadMedida(payload);
       if (ok != null) {
         bsModal.hide();
-        await refreshTable();
+        if (onSaveSuccess) await onSaveSuccess(); else await cargarUnidadesMedidaList().then((list) => renderUnidadesMedida(list, tbody));
       }
     } else {
       const ok = await crearUnidadMedida(payload);
       if (ok != null) {
         bsModal.hide();
-        await refreshTable();
+        if (onSaveSuccess) await onSaveSuccess(); else await cargarUnidadesMedidaList().then((list) => renderUnidadesMedida(list, tbody));
       }
     }
   };
 }
 
-function cargarModalFormularioUnidadMedida(btn, accion, unidad = null) {
+function cargarModalFormularioUnidadMedida(btn, accion, unidad = null, onSaveSuccess = null) {
   if (!btn) return;
-  btn.onclick = () => openModalUnidadMedida(accion, unidad);
+  btn.onclick = () => openModalUnidadMedida(accion, unidad, onSaveSuccess);
 }
+
+const PAGE_SIZE = PAGE_SIZE_DEFAULT;
 
 export async function init() {
   const tbody = document.getElementById("data-unidades-medida");
-  if (!tbody) {
-    console.error("No se encontró #data-unidades-medida.");
-    return;
+  if (!tbody) return;
+
+  let listCompleta = [];
+  let currentPage = 1;
+
+  function refreshTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = listCompleta.slice(start, start + PAGE_SIZE);
+    renderUnidadesMedida(slice.length ? slice : [], tbody, listCompleta.length === 0);
+    renderPagination("pagination-unidades-medida", listCompleta.length, PAGE_SIZE, currentPage, (p) => {
+      currentPage = p;
+      refreshTable();
+    });
   }
 
-  try {
-    const lista = await cargarUnidadesMedidaList();
-    renderUnidadesMedida(lista, tbody);
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error cargando unidades de medida</td></tr>`;
+  async function refreshFromServer() {
+    try {
+      listCompleta = await cargarUnidadesMedidaList();
+      currentPage = 1;
+      refreshTable();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error cargando unidades de medida</td></tr>`;
+    }
   }
+
+  await refreshFromServer();
 
   const btnNuevo = document.getElementById("btnNuevoUnidadMedida");
-  if (btnNuevo) {
-    cargarModalFormularioUnidadMedida(btnNuevo, "Nuevo", null);
-  }
-
-  const refreshTable = () => cargarUnidadesMedidaList().then((list) => renderUnidadesMedida(list, tbody));
+  if (btnNuevo) cargarModalFormularioUnidadMedida(btnNuevo, "Nuevo", null, refreshFromServer);
 
   tbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-action]");
     if (!btn) return;
-
     const id = btn.dataset.id;
     const action = btn.dataset.action;
-
     if (action === "editar") {
       const unidad = await obtenerUnidadMedidaPorId(id);
-      if (unidad) openModalUnidadMedida("Editar", unidad);
+      if (unidad) openModalUnidadMedida("Editar", unidad, refreshFromServer);
     }
-
     if (action === "eliminar") {
       const confirmado = await confirmarModal("¿Está seguro de eliminar esta unidad de medida?", "Eliminar unidad de medida");
       if (!confirmado) return;
       const ok = await eliminarUnidadMedida(id);
-      if (ok != null) await refreshTable();
+      if (ok != null) await refreshFromServer();
     }
   });
 }

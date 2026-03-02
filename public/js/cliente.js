@@ -1,4 +1,4 @@
-import { loading, confirmarModal } from "./utilidades.js";
+import { loading, confirmarModal, PAGE_SIZE_DEFAULT, renderPagination } from "./utilidades.js";
 
 const API_BASE = `${window.location.origin}/api`;
 
@@ -78,9 +78,9 @@ const eliminarCliente = async function (id) {
   }
 };
 
-function renderClientes(clientes, tbody) {
+function renderClientes(clientes, tbody, showEmpty = true) {
   if (!Array.isArray(clientes) || clientes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center">No hay clientes disponibles</td></tr>`;
+    tbody.innerHTML = showEmpty ? `<tr><td colspan="8" class="text-center">No hay clientes disponibles</td></tr>` : "";
     return;
   }
   tbody.innerHTML = clientes
@@ -104,7 +104,7 @@ function renderClientes(clientes, tbody) {
     .join("");
 }
 
-function openModalCliente(accion, cliente) {
+function openModalCliente(accion, cliente, onSaveSuccess = null) {
   const prev = document.getElementById("modalCliente");
   if (prev) prev.remove();
 
@@ -193,7 +193,6 @@ function openModalCliente(accion, cliente) {
   modalEl.addEventListener("hidden.bs.modal", () => modalWrap.remove());
 
   const tbody = document.getElementById("data-clientes");
-  const refreshTable = () => cargarClientesList().then((list) => renderClientes(list, tbody));
 
   document.getElementById("btnGuardarCliente").onclick = async () => {
     const form = document.getElementById("formCliente");
@@ -211,30 +210,48 @@ function openModalCliente(accion, cliente) {
     if (accion === "Editar" && data.id) {
       payload.id = Number(data.id);
       const ok = await actualizarCliente(payload);
-      if (ok != null) { bsModal.hide(); await refreshTable(); }
+      if (ok != null) { bsModal.hide(); if (onSaveSuccess) await onSaveSuccess(); else await cargarClientesList().then((list) => renderClientes(list, tbody)); }
     } else {
       const ok = await crearCliente(payload);
-      if (ok != null) { bsModal.hide(); await refreshTable(); }
+      if (ok != null) { bsModal.hide(); if (onSaveSuccess) await onSaveSuccess(); else await cargarClientesList().then((list) => renderClientes(list, tbody)); }
     }
   };
 }
+
+const PAGE_SIZE = PAGE_SIZE_DEFAULT;
 
 export async function init() {
   const tbody = document.getElementById("data-clientes");
   if (!tbody) return;
 
-  try {
-    const clientes = await cargarClientesList();
-    renderClientes(clientes, tbody);
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error cargando clientes</td></tr>`;
+  let listCompleta = [];
+  let currentPage = 1;
+
+  function refreshTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = listCompleta.slice(start, start + PAGE_SIZE);
+    renderClientes(slice.length ? slice : [], tbody, listCompleta.length === 0);
+    renderPagination("pagination-clientes", listCompleta.length, PAGE_SIZE, currentPage, (p) => {
+      currentPage = p;
+      refreshTable();
+    });
   }
 
-  const btnNuevo = document.getElementById("btnNuevoCliente");
-  if (btnNuevo) btnNuevo.onclick = () => openModalCliente("Nuevo", null);
+  async function refreshFromServer() {
+    try {
+      listCompleta = await cargarClientesList();
+      currentPage = 1;
+      refreshTable();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error cargando clientes</td></tr>`;
+    }
+  }
 
-  const refreshTable = () => cargarClientesList().then((list) => renderClientes(list, tbody));
+  await refreshFromServer();
+
+  const btnNuevo = document.getElementById("btnNuevoCliente");
+  if (btnNuevo) btnNuevo.onclick = () => openModalCliente("Nuevo", null, refreshFromServer);
 
   tbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-action]");
@@ -243,13 +260,13 @@ export async function init() {
     const action = btn.dataset.action;
     if (action === "editar") {
       const cliente = await obtenerClientePorId(id);
-      if (cliente) openModalCliente("Editar", cliente);
+      if (cliente) openModalCliente("Editar", cliente, refreshFromServer);
     }
     if (action === "eliminar") {
       const confirmado = await confirmarModal("¿Eliminar este cliente?", "Eliminar cliente");
       if (!confirmado) return;
       const ok = await eliminarCliente(id);
-      if (ok != null) await refreshTable();
+      if (ok != null) await refreshFromServer();
     }
   });
 }

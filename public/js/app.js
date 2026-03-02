@@ -49,6 +49,12 @@ function navigate(path) {
 window.addEventListener("popstate", () => loadView(location.pathname));
 
 document.addEventListener("click", (e) => {
+  const back = e.target.closest("a[data-back], button[data-back]");
+  if (back) {
+    e.preventDefault();
+    history.back();
+    return;
+  }
   const a = e.target.closest("a[data-link]");
   if (!a) return;
   e.preventDefault();

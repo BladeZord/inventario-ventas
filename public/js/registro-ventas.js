@@ -1,4 +1,4 @@
-import { loading, confirmarModal } from "./utilidades.js";
+import { loading, confirmarModal, PAGE_SIZE_DEFAULT, renderPagination } from "./utilidades.js";
 
 const API_BASE = `${window.location.origin}/api`;
 
@@ -182,10 +182,10 @@ function getDetallesFromForm() {
   return detalles;
 }
 
-function renderVentas(ventas, tbody) {
+function renderVentas(ventas, tbody, showEmpty = true) {
   if (!tbody) return;
   if (!Array.isArray(ventas) || ventas.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay ventas registradas</td></tr>';
+    tbody.innerHTML = showEmpty ? '<tr><td colspan="7" class="text-center">No hay ventas registradas</td></tr>' : "";
     return;
   }
   tbody.innerHTML = ventas
@@ -313,14 +313,32 @@ export async function init() {
       tbodyDetalle.innerHTML = "";
       addDetalleRow();
       updateTotales();
-      const ventas = await cargarVentas();
-      renderVentas(ventas, document.getElementById("data-ventas"));
+      if (refreshFromServer) await refreshFromServer();
     }
   });
 
   const dataVentas = document.getElementById("data-ventas");
-  const refreshVentas = () => cargarVentas().then((list) => renderVentas(list, dataVentas));
-  await refreshVentas();
+  const PAGE_SIZE = PAGE_SIZE_DEFAULT;
+  let ventasCompletas = [];
+  let currentPage = 1;
+
+  function refreshTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = ventasCompletas.slice(start, start + PAGE_SIZE);
+    renderVentas(slice.length ? slice : [], dataVentas, ventasCompletas.length === 0);
+    renderPagination("pagination-ventas", ventasCompletas.length, PAGE_SIZE, currentPage, (p) => {
+      currentPage = p;
+      refreshTable();
+    });
+  }
+
+  async function refreshFromServer() {
+    ventasCompletas = await cargarVentas();
+    currentPage = 1;
+    refreshTable();
+  }
+
+  await refreshFromServer();
 
   dataVentas?.addEventListener("click", async (e) => {
     const btnVer = e.target.closest(".btn-ver-venta");
@@ -335,7 +353,7 @@ export async function init() {
       const confirmado = await confirmarModal("¿Está seguro de anular esta venta?", "Anular venta");
       if (!confirmado) return;
       const ok = await anularVenta(id);
-      if (ok != null) await refreshVentas();
+      if (ok != null) await refreshFromServer();
     }
   });
 }

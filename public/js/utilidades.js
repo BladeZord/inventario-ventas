@@ -152,3 +152,50 @@ export function confirmarModal(mensaje, titulo = "Confirmar", textoConfirmar = "
   });
 }
 
+/** Tamaño de página por defecto para listados */
+export const PAGE_SIZE_DEFAULT = 10;
+
+/**
+ * Renderiza controles de paginación (Bootstrap) en el contenedor indicado.
+ * @param {string} containerId - ID del elemento donde se insertará la paginación
+ * @param {number} totalItems - Total de registros
+ * @param {number} pageSize - Registros por página
+ * @param {number} currentPage - Página actual (1-based)
+ * @param {(page: number) => void} onPageChange - Callback al cambiar de página
+ */
+export function renderPagination(containerId, totalItems, pageSize, currentPage, onPageChange) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (totalItems <= 0) {
+    container.innerHTML = "";
+    return;
+  }
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const page = Math.max(1, Math.min(currentPage, totalPages));
+  // Mostrar siempre la barra cuando hay datos (aunque sea 1 página)
+  let html = '<nav aria-label="Paginación" class="d-flex align-items-center flex-wrap gap-2">';
+  html += `<span class="small text-muted">Página ${page} de ${totalPages}</span>`;
+  html += '<ul class="pagination pagination-sm mb-0">';
+  html += `<li class="page-item ${page <= 1 ? "disabled" : ""}"><a class="page-link" href="#" data-page="${page - 1}">Anterior</a></li>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages > 7 && (i > 2 && i < totalPages - 1) && Math.abs(i - page) > 1) {
+      if (i === 3 && page > 4) html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
+      continue;
+    }
+    if (totalPages > 7 && i === 3 && page <= 4) html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
+    html += `<li class="page-item ${i === page ? "active" : ""}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+  }
+  if (totalPages > 7 && page < totalPages - 1) html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
+  html += `<li class="page-item ${page >= totalPages ? "disabled" : ""}"><a class="page-link" href="#" data-page="${page + 1}">Siguiente</a></li>`;
+  html += "</ul></nav>";
+  container.innerHTML = html;
+  container.querySelectorAll(".page-link[data-page]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (el.closest(".page-item.disabled")) return;
+      const p = Number(el.dataset.page);
+      if (p >= 1 && p <= totalPages) onPageChange(p);
+    });
+  });
+}
+
