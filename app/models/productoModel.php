@@ -19,8 +19,12 @@ class ProductoModel extends Conexion
             Logger::logInfo("Inicia consultaProductos");
 
             $stmt = $this->dbh->prepare("
-                SELECT p.*
+                SELECT p.*,
+                c.nombre as categoria_nombre,
+                um.nombre as unidad_medida_nombre
                 FROM productos p
+                INNER JOIN categorias c ON c.id = p.id_categoria
+                INNER JOIN unidades_medida um ON um.id = p.id_unidad_medida
                 WHERE p.estado <> :estado
                 -- ORDER BY p.id DESC
             ");
@@ -46,8 +50,12 @@ class ProductoModel extends Conexion
             Logger::logInfo("Inicia consultaProductoPorId", ['id' => (int) $id]);
 
             $stmt = $this->dbh->prepare("
-                SELECT p.*
+                SELECT p.*,
+                c.nombre as categoria_nombre
+                um.nombre as unidad_medida_nombre
                 FROM productos p
+                INNER JOIN categorias c ON c.id = p.id_categoria
+                INNER JOIN unidades_medida um ON um.id = p.id_unidad_medida
                 WHERE p.id = :id
                   AND p.estado <> :estado_eliminado
                 LIMIT 1
