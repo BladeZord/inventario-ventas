@@ -14,6 +14,40 @@ La interfaz incluye botón **Volver** en las vistas para retroceder a la pantall
 
 ---
 
+## Capturas de pantalla
+
+Las imágenes están en `public/images/` y se previsualizan a continuación.
+
+### Página inicial
+
+![Página inicial](public/images/Pagina_incial.png)
+
+### Productos
+
+![Productos](public/images/Pagina_productos.png)
+
+### Categorías
+
+![Categorías](public/images/Pagina_categorias.png)
+
+### Unidades de medida
+
+![Unidades de medida](public/images/Pagina_unidad_medida.png)
+
+### Clientes
+
+![Clientes](public/images/Pagina_clientes.png)
+
+### Registro de ventas — Formulario
+
+![Registro de ventas - Formulario](public/images/Pagina_registro_venta_formulario.png)
+
+### Registro de ventas — Detalle venta realizada
+
+![Registro de ventas - Detalle](public/images/Pagina_registro_venta_detalleVentaRealizada.png)
+
+---
+
 ## Declaración de uso de IA
 
 Este proyecto ha sido desarrollado con asistencia de **herramientas de inteligencia artificial** (IA) para tareas de correccion puntual, optimización de codigo existente, documentación y revisión. La arquitectura, decisiones de diseño y requisitos funcionales son responsabilidad del autor.
