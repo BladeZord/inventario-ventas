@@ -5,6 +5,7 @@ const routes = {
   "/": "/views/home/home.html",
   "/productos": "/views/producto/productos.html",
   "/categorias": "/views/categoria/categoria.html",
+  "/unidades-medidas": "/views/unidad-medida/unidades-medida.html",
   "/registro-ventas": "/views/registro-ventas/registro-ventas.html",
 };
 

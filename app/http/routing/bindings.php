@@ -3,16 +3,19 @@
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\UnidadMedidaController;
 use App\Http\Controllers\VentaController;
 
 use App\Models\CategoriaModel;
 use App\Models\ClienteModel;
 use App\Models\ProductoModel;
+use App\Models\UnidadMedidaModel;
 use App\Models\VentaModel;
 
 use App\Services\Impl\CategoriaServiceImpl;
 use App\Services\Impl\ClienteServiceImpl;
 use App\Services\Impl\ProductoServiceImpl;
+use App\Services\Impl\UnidadMedidaServiceImpl;
 use App\Services\Impl\VentaServiceImpl;
 
 return [
@@ -38,5 +41,11 @@ return [
         $model = new ClienteModel();
         $service = new ClienteServiceImpl($model);
         return new ClienteController($service);
+    },
+
+    UnidadMedidaController::class => function () {
+        $model = new UnidadMedidaModel();
+        $service = new UnidadMedidaServiceImpl($model);
+        return new UnidadMedidaController($service);
     },
 ];
